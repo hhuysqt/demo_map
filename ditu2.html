@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="http://ditu.google.cn/maps/api/js?sensor=false" type="text/javascript"></script>
+	<script src="jquery.js"></script>
+    <style type="text/css">
+      html, body, #map-canvas { height: 100%; margin: 0; }
+    </style>
+    <script type="text/javascript">
+
+	var latitude_glb = 30;
+	var longitude_glb = 112;
+	var glbmap;
+	var lastpoint;
+
+    function createMarker(point, map, label, html) {
+      var mark1 = new google.maps.Marker({
+        position: point,
+        map: map,
+      });
+
+      google.maps.event.addListener(mark1, "click",
+        function() {
+          map_location = mark1.getPosition();
+          map.panTo(map_location);
+          mark1.info = new google.maps.InfoWindow({content: "<div align='left'><strong>" + label + "</strong><br/>"
+            + html + "</div>"});
+          mark1.info.open(map, mark1);
+
+      });
+
+      map.setCenter(point);
+      return mark1;
+    }
+
+    function setAMarker(point, map) {
+      if (point) {
+        var lat = point.latitude;
+        if ((lat < -90) || (lat > 90)) {
+          alert("Invalid latitude: '" + lat + "'");
+          return;
+        }
+        var lng = point.longitude;
+        if ((lng < -180) || (lng > 180)) {
+          alert("Invalid longitude: '" + lng + "'");
+          return;
+        }
+        lat = lat + ((Math.random() - 0.5) /  100000000000.0);
+        lng = lng + ((Math.random() - 0.5) /  100000000000.0);
+
+        var html = point.info;
+        var label = "[" + point.latitude + ", " + point.longitude + "]";
+
+
+        point = new google.maps.LatLng(lat, lng);
+
+        lastpoint = createMarker(point, map, label, html);
+      }
+    }
+
+	function point_coo()
+	{
+		this.latitude = 0;
+		this.longitude = 0;
+	}
+
+	function movemark() {
+		var xmlhttp;
+		xmlhttp=new XMLHttpRequest();
+		xmlhttp.onreadystatechange = function()
+		{
+			if(xmlhttp.readyState==4 && xmlhttp.status==200)
+			{
+				var response_='';
+				response_ = xmlhttp.responseText;
+//				alert(response_ + " " + response_.length);
+				for(var i = 0; i < response_.length-4; i=i+22)
+				{
+					var lat_str = response_.substring(i, i+11);
+					var lng_str = response_.substring(i+11,i+22);
+					var point = new point_coo();
+					point.latitude = parseFloat(lat_str);
+					point.longitude = parseFloat(lng_str);
+//					document.write("latitude: "+point.latitude+"\nlongitude: "+point.longitude);
+					
+					setAMarker(point, glbmap);
+				}
+			}
+		}
+		xmlhttp.open("GET","/demo_map/tmp_php.php",true);
+		xmlhttp.send();
+	}
+
+    function initialize() {
+      glbmap = new google.maps.Map(
+        document.getElementById('map-canvas'), {
+          center: new google.maps.LatLng(10, 10),
+          zoom: 2,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
+
+
+	  setInterval("movemark()", 1000);
+
+    }
+    google.maps.event.addDomListener(window, 'load', initialize);
+
+
+
+    </script>
+  </head>
+  <body>
+    <div id="map-canvas"></div>
+  </body>
+</html>
+    
